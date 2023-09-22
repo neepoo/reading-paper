@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package pb;
+
+message LogEntryMetaInfo {
+  uint64 term = 1;
+  uint64 index = 2;
+}
+
+message LogEntry {
+  LogEntryMetaInfo meta = 1;
+  bytes command = 2;
+}
+
+message AppendEntryReq {
+  // leader用于保证自己的合法地位
+  bool heartbeat = 1;
+
+  // term 通信双方都需要交换该信息
+  uint64 term = 2;
+
+  // max_index leader提交的entry中的最大index
+  uint64 max_index = 3;
+  // leader 最近提交的entry的term和index
+  // 如果follower没有发现在他的logs中发现相同term和index的entry则会拒绝该logEntry
+  // 为了保证Log Matching属性
+  LogEntryMetaInfo preceded_log_entry = 4;
+
+  // 当前要复制的logEntry,不确定是否需要batch,这可能是一个负优化？
+  // 当前就是每有一个client request就创建一个logEntry
+  LogEntry log = 5;
+
+  // 用于如果follower和leader的log不一致时,
+  // follower确定从哪开始duplicate log
+  uint64 next_index = 6;
+
+}
